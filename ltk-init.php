@@ -34,7 +34,7 @@
 					<li>Como cada lançamento anterior contribuiu nas vendas do lançamento atual.</li>
 				</ul>
 				<p></p>
-				<p></p>
+				<p></p><p></p><p></p>
 				
 		
 				
