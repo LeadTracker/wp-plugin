@@ -80,10 +80,10 @@
         <div class="meta-box-sortables ui-sortable">
           <div class="postbox id_ltk" style="max-height: 315px;">
            <h2 class="hndle">
-				   	<span><?php echo getTextLtk('ltkMsgAdmInitYourId'); ?></span>
+				   	<span>Configurações</span>
 				   	<div class="status <?php  echo LtkWp::getIdLtk() != ''?'on':'off'; ?>">
 				   	   <span></span>
-					   <?php  echo LtkWp::getIdLtk() != '' ? getTextLtk('ltkMsgAdmInitYourId_1') : getTextLtk('ltkMsgAdmInitYourId_2') ; ?>
+					   <?php  echo LtkWp::getIdLtk() != '' ? 'ativo' : 'inativo' ; ?>
 		        </div>
 				   </h2>
            
@@ -149,7 +149,7 @@
       <div class="postbox-container" style="width:99%;">
         <div class="meta-box-sortables ui-sortable">
           <div class="postbox pn_ltk">
-           <h2 class="hndle"><span><?php echo getTextLtk('ltkMsgAdmInitPainel_3'); ?></span></h2>
+           <h2 class="hndle"><span>Relatórios</span></h2>
 
 	   		<div class="inside analytics-dash clearfix">
 					<a href="https://painel.leadtracker.com.br/" target="_blank" class="dash">

@@ -1,7 +1,5 @@
 <?php
 
-require_once('lang/texts.php');
-
 /**
  * Classe responsável por controlar o plugin
  * Agradecimentos a Frank Vieiro e Navegg
