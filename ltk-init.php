@@ -89,78 +89,54 @@
            
 	   <div class="inside">
 					
-			<?php /* <p>Verifique sua conta do Leadtracker Analytics:</p> */ ?>
-
-
 				<?php 
-					//getInfo User
-					global 	$current_user; 
-					get_currentuserinfo();
-				 ?>
+				//getInfo User
+				global 	$current_user; 
+				wp_get_current_user();
 
-				<?php /* <label for="idLtk" style="display: block; float: left; width: 70px; margin-right: 8px; padding-top: 7px; text-align: right;">ID Leadtracker:</label>*/ ?>
-				<form method="post" action="" onSubmit ="return validaFormId()" > 
+				if(!LtkWp::isLogged()) {
+				?>
+				<div class="login">
+					<h4>
+						<b>Logue com a sua conta:</b>
+					</h4>
+					<div class="btn" onCLick="openLoginPopup()">
+						<img src="<?php echo plugins_url( 'contents/ltk-login.png', __FILE__ ); ?>" />
+						<span>Entrar</span>
+					</div>
+
+					<a class="know" target="_blank" href="https://leadtracker.com.br?utm_content=plugin_wordpress">Não possui uma conta? Conheça o Lead Tracker</a>
+				</div>
+				<?php
+				} else {
+				?>
+
+				<form method="post" action=""> 
+					<input type="hidden" name="check" value="<?=LtkWp::getOauthCheck()?>" />
 					<h4><b>Logue com a sua conta:</b></h4>
 					<p>Selecione qual pixel você deseja instalar.</p>
 					<?php
-						if( isset( $_POST['idLtk']) )
-							$ltkId = $_POST['idLtk'];
-						else if(LtkWp::getIdLtk() != ''){
-							$ltkId =  LtkWp::getIdLtk();
-						}
+						$accs = LtkWp::getAccList();
+						$ltkId =  LtkWp::getIdLtk();
+						
 							
 					?>
-					<!-- <input type="text" name="idLtk" id="idLtk" value="<?php echo $ltkId; ?>" placeholder="<?php echo getTextLtk('ltkMsgAdmInitYourId_5');?>"/> -->
-					<select>
-						<option value="6">(6) Lead Tracker</option>
+					<select name="ltkId">
+						<?php
+						foreach($accs as $k=>$v){ ?>
+						<option <?=$k==$ltkId?'selected':''?>  value="<?=$k?>"><?=$v?></option>
+						<?php } ?>
 					</select>
 
 					<button class="button" title="Salvar">Salvar</button>
-
-			        	<?php if( isset( $_POST['idLtk']) ||  $msgPost['class'] == 'updtSucess'){ ?>
-				        	<p class="<?php echo $msgPost['class']; ?>"><?php echo $msgPost['msg'];?></p>
-					<?php } ?>					
+			        	
 				</form>
-
-				
-				<?php
-					//verifição para saber se precisa opcao de criar conta ou buscar id
-					 if( (!isset($msgPost['class']) &&  LtkWp::getIdLtk() == '')  || (isset($msgPost['class']) && $msgPost['class'] != 'updtSucess') ){ 
-				?>
-
-				<!-- <form method="post" action="" onSubmit ="return validaFormSearch()" <?php echo $msgPost['class'] == 'updtSucess' ? 'styledisplay:none' : ''; ?> > 
-
-					<p>Oi</p>
-
-					<input type="text" name="emLtk" id="emLtk" value="<?php echo isset($_POST['emLtk']) ? $_POST['emLtk'] : '';?>" style="width: 100%; max-width: 200px; background-image: none; font-size: 13px;" />
-					<button class="button" title="<?php echo getTextLtk('ltkMsgAdmInitYourId_12'); ?>" >
-						<?php echo getTextLtk('ltkMsgAdmInitYourId_12'); ?>
-					</button>
-
-				                    <?php if( isset( $_POST['emLtk']) ){ ?>
-				                            <p style="clear:both;" class="<?php echo $msgPost['class']; ?>"><?php echo $msgPost['msg'];?></p>
-						<br/>
-				                    <?php } ?>
-
-
-					<div class="sing-up ltk_lst" style="clear: both;">
-						<?php 
-							/* <li class="h">
-						   		<a href="<?php echo getTextLtk('ltkMsgAdmInitYourId_8_link'); ?>"  target="_blank">
-							     		<?php echo getTextLtk('ltkMsgAdmInitYourId_8'); ?>
-						   		</a>
-					        	</li> */ 
-						?>
-
-						<a href="javascript:void(0)" onClick="document.getElementById('containerNewAccount').style.display = 'block'" >
-							<?php echo getTextLtk('ltkMsgAdmInitYourId_9'); ?> 
-							<span><?php echo getTextLtk('ltkMsgAdmInitYourId_10'); ?></span>
-						</a>
-					</div>	
-
-				</form>    -->
+				<a class="logout" href="<?=LtkWp::getLogoutUrl()?>">Deslogar</a>
 
 				<?php } ?>
+
+				
+				
 
 
 		<div class="clearme"></div>
@@ -169,13 +145,7 @@
           </div>
         </div>
       </div>
-	 
- 
-  
 
-
-  
-	  
       <div class="postbox-container" style="width:99%;">
         <div class="meta-box-sortables ui-sortable">
           <div class="postbox pn_ltk">
@@ -212,53 +182,17 @@
 </div>
 <script type="text/javascript">
 
-function validaFormId(){
+function openLoginPopup(){
+	let url = '<?=LtkWp::getOauthUrl()?>';
 
-  if(document.getElementById('idLtk').value == '' ||  document.getElementById('idLtk').value == '<?php echo getTextLtk('ltkMsgAdmInitYourId_5');?>'){
-	alert("<?php echo getTextLtk('ltkMsgAdmInitYourIdAlert_1'); ?>");
-	return false;
-  }
-   return true;
-}
+	let popup = window.open(url, 'popup', "width=410, height=610, resizable=false, scrollbars=no")
 
-function validaFormNew(){
-
-	if(document.getElementById('nmLtk').value == '' ){
-        	alert("<?php echo getTextLtk('ltkMsgAdmInitError_3');?>");
-		document.getElementById('nmLtk').focus();		
-        	return false;
-	}		
-
-	if(!validaEmail('nemLtk'))
-		return false;
-
-	return true;
-}
-function validaFormSearch(){
-   return validaEmail('emLtk');
-}
-
-function validaEmail(id){
-  if(document.getElementById(id).value == '' ){
-        alert("<?php echo getTextLtk('ltkMsgAdmInitError_4');?>");
-	document.getElementById(id).focus();		
-        return false;
-  }else
-        if(!checkMail(document.getElementById(id).value)){
-                alert("<?php echo getTextLtk('ltkMsgAdmInitError_5');?>");
-		document.getElementById(id).focus();		
-                return false;
-        }
-        
-   return true;
-}
-function checkMail(mail){
-	var er = new RegExp(/^[A-Za-z0-9_\-\.]+@[A-Za-z0-9_\-\.]{2,}\.[A-Za-z0-9]{2,}(\.[A-Za-z0-9])?/);
-	if(typeof(mail) == "string")
-		if(er.test(mail)) return true; 
-	else if(typeof(mail) == "object"){
-		if(er.test(mail.value))	return true;
-	}else	return false;
+	var popupTimer = setInterval(function() { 
+		if(popup.closed) {
+			clearInterval(popupTimer);
+			window.location.reload(true);
+		}
+	}, 1000);
 }
 
 </script>

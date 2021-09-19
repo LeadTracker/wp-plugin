@@ -19,11 +19,15 @@
 .toplevel-leadtracker .ic_ltk{ background:transparent url(<?php echo plugins_url( 'ui_wp_ltk.png', __FILE__ ); ?>) no-repeat right -231px;}
 .inside{padding:10px!important;}
 .inside p{ line-height:20px; padding-bottom:10px; margin:5px 0 0 5px; }
+.inside .login .btn {display:flex;flex-direction:column;align-items: center; text-decoration:none; color: inherit; border:1px solid #333; border-style: dotted;padding:5px 10px; width:50px}
+.inside .login a.know {margin-top:10px;display:block;}
+.inside .login .btn img {display:inline-block; max-width:40px;width:auto;}
+
 .ltk-menu-image{float:left; width:28px; height:28px; background:transparent url(<?php echo plugins_url( 'ui_wp_ltk.png', __FILE__ ); ?>) no-repeat right -256px;}
 
 .rep_ltk { float:left; width:49%; margin:0 5px;}
 .rep_ltk div{ background:#FFFBCC url(<?php echo plugins_url( 'ui_wp_ltk.png', __FILE__ ); ?>) no-repeat -637px -103px; height:80px; border:1px solid #E6DB55; width:98%; min-width:550px; max-width: 782px;}
-.rep_ltk div p{ padding:15px 15px 0 181px;}
+.rep_ltk div p{ padding:15px 15px 0 181px; }
 .rep_ltk div p a{ color:#60A51B; font-weight:bold;}
 .rep_ltk div p a:hover{ color:#D54E21;}
 
@@ -95,7 +99,8 @@
 
 .id_ltk .inside {padding: 15px 25px 22px!important;}
 .id_ltk .inside p {margin: 0}
-.id_ltk .inside form {width: 48%; display: inline-block; vertical-align: top; padding: 0 10px; box-sizing: border-box;}
+.id_ltk .inside form {width: 100%; display: inline-block; vertical-align: top; padding: 0 10px; box-sizing: border-box;}
+.id_ltk .inside .logout {margin-top:15px;margin-left:10px;display:block}
 
 .cnt_ltk {}
 

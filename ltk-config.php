@@ -4,28 +4,21 @@ require_once('lang/texts.php');
 
 /**
  * Classe responsável por controlar o plugin
+ * Agradecimentos a Frank Vieiro e Navegg
  */
 class LtkWp{
 
-	//private static $wpdb;
 	private static $info;
 	
-	private static $ltkApiUrl = 'http://cluster.navegg.com/ws/';
-	private static $ltkApiKey = '3b1eb550948434f6d049a04830188de4';
+	private static $oauthUrl = 'https://painel.leadtracker.com.br/api/v1/cf-oauth/';
+	private static $oauthInfoUrl = 'https://painel.leadtracker.com.br/api/v1/cf-oauth-info/';
+
 	
 	
 	/**
 	 * Função de inicialização
 	 */
 	function inicializar(){
-	  //Mapear objeto para manipular o banco 
-	  // global $wpdb;
-	  // LtkWp::$wpdb = $wpdb;
-	  /** Com $wpdb você manipula o banco de dados agora ele esta referenciado em uma variavel estática da classe.
-	   * Para utiliza-la agora não precisa declarar global $wpdb em todas funções, basta usar a estica da classe. 
-	   * Ex.: LtkWp::$wpdb->
-	   * Esta variavel não está sendo usado no momento, pois na v1.0 o id é amazenado na tablea options padrão do Wp. Para futuras versões basta descomentar a linhas que possuem $wpdb
-	   */
 	
 	  //Mapear infos relevantes para plugin
 	  LtkWp::$info['plugin_fpath']= dirname(__FILE__);
@@ -37,7 +30,7 @@ class LtkWp{
 	  //Chama a função para criar página de administração
 	  add_action( 'admin_menu', array('ltkWp','createAdmLtk'));
 
-	  //Colocar Mensagem de erro se não estiver cadastrado ID_NAVEGG
+	  //Colocar Mensagem de erro se não estiver cadastrado LTK_ID
 	  if(LtkWp::getIdLtk() == ''&& $_GET['page'] != 'ltk-admin' )//Verifica se não é post! E imprimie
 	     add_action( 'admin_notices', array('ltkWp','echoMsgNotId' ));
 	}
@@ -51,6 +44,7 @@ class LtkWp{
 	    
 	    //Criar dados do banco
 	    LtkWp::createIdLtk();
+		LtkWp::createLtkToken();
 	}
 	
 	/**
@@ -58,7 +52,8 @@ class LtkWp{
 	 */
 	function desinstalar(){
 	  //Deleta dados do banco
-	   LtkWp::deleteIdLtk();  
+	   LtkWp::deleteIdLtk();
+	   LtkWp::deleteLtkToken();
 	}
 	
 	
@@ -70,241 +65,176 @@ class LtkWp{
 	 * Cria página de adm
 	 */
 	function createAdmLtk(){
-	
-	 add_menu_page('Lead Tracker','Lead Tracker',10,'ltk-admin',array('LtkWp','admInit'),plugins_url( '/contents/ltklogo.svg', __FILE__ ));
-	
-	 /* Exmplo com submenu para outra funcionalidade...
-	  add_submenu_page('ltk-admin','Leadtracker - Optimeze. Results. - Painel ','Painel','manage_options','ltk-adm-rel',array('LtkWp','admInit'));*/
-	
+		add_menu_page('Lead Tracker','Lead Tracker',10,'ltk-admin',array('LtkWp','admInit'),plugins_url( '/contents/ltklogo.svg', __FILE__ ));
 	}
 	
 	/**
 	 * Faz o include da pagina inicial do administrador, que é chamado quando
-	 * o usuário clica no menu NAVEGG
+	 * o usuário clica no menu Lead Tracker
 	 */
 	function admInit(){ 
-	
-	  //caso esteja trocando o ID
-	  if( isset( $_POST['idLtk']) ){
-	
-		//verifica se é um numerico
-		if(LtkWp::idIsNum($_POST['idLtk'])){            
-	
-			//verifica se id é diferente do que ja estava cadastrado ou default
-			if(!LtkWp::idIsDiference($_POST['idLtk'])){
-			     $msgPost['class'] = 'updtFail';    
-			     $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_4');
+
+		// Oauth return from panel
+		if($_GET['check'] && $_GET['code']){
+
+			if($_SESSION['LTK_OAUTH_CODE'] == $_GET['check']){
+				LtkWp::setLtkToken($_GET['code']);
 			}
-			else //atualiza o id navegg
-			     try{
-				     	$uptStatus =LtkWp::setIdLtk(str_replace(" ","",$_POST['idLtk']));           			     
-			        	if($uptStatus){           
-						//perdeu o retorno do WS (caso tinha cadastrado antes)
-						LtkWp::deleteAutoInLtk();
-			        		$msgPost['class'] = 'updtSucess';
-				     	  	$msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_1');
-			       		}else
-			     			throw new Exception($uptStatus);		
-	
-			     }catch (Exception $e) {
-			     	$msgPost['class'] = 'updtFail';    
-			       	$msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_3');
-			     }
-	        }else{
-	           $msgPost['class'] = 'updtFail';    
-		   $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_2');
-		}       
-	
-	  }else //caso esteja querendo buscar ID através do e-mail cadastrado
-		if($_POST['emLtk']){
-			try{
-				$rep = LtkWp::apiGetId($_POST['emLtk']);				
-				if($rep->{"accid"}){
-					if(!LtkWp::idIsDiference(str_replace(" ","",$rep->{"accid"}))){
-        	            $msgPost['class'] = 'updtFail';
-	                    $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_4');
-                	}else{
-                        $rep->{"accid"} = array_unique($rep->{"accid"});
-                        if(count($rep->{"accid"}) > 1){
-        	                $msgPost['class'] = 'updtFail';
-	                        $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_5');
-                            foreach($rep->{"accid"} as $id){
-	                            $msgPost['msg'] .= '<br>Account ID - <strong>'.$id.'</strong>';
-                            }
-                        }else{
-                            if(LtkWp::setIdLtk($rep->{"accid"}[0])){
-					            //perdeu o retorno do WS (caso tinha cadastrado antes)
-					            LtkWp::deleteAutoInLtk();
-                	            $msgPost['class'] = 'updtSucess';
-                	            $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_1');
-                	        }else{
-                	            throw new Exception($uptStatus); 
-                            }
-                        }
-                    }
-				}else{
-                    if(empty($rep))
-                        	throw new Exception(getTextLtk('ltkMsgAdmInitError_6'));
-                        else
-					    	throw new Exception("err");
-                }
+			echo "<script>window.close()</script>";
+		}
 
-			}catch (Exception $e) {
-		 	   $msgPost['class'] = 'updtFail';
-	                   $msgPost['msg'] = getTextLtk('ltkMsgAdmInitError_2');			
-			}			
-		//endIfGetIdByEmail
-		}else
-			if($_POST['newLtk']){
-				try{
-					$name     = addslashes($_POST['nmLtk']);
-					$email    = addslashes($_POST['nemLtk']);
-					$siteName = addslashes($_POST['stLtk']);
-					$siteUrl  = addslashes($_POST['urLtk']);
-					if(empty($name) || empty($email)) throw new Exception("empty");
-					
-					$rep = LtkWp::apiNewAcc($name,$email,$siteName,$siteUrl);
+		// Logout = remove Token
+		if($_GET['check'] && $_GET['logout']){
 
-					if(!@$rep->{"error"}){
+			if($_SESSION['LTK_OAUTH_CODE'] == $_GET['check']){
+				error_log('ta removendo sim....');
+				LtkWp::deleteLtkToken();
+				LtkWp::deleteIdLtk();
+			}
 
-                        if(!LtkWp::idIsDiference(str_replace(" ","",$rep->{"acc_id"}))){
+			$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]".$_SERVER['REQUEST_URI'];
+			$url = preg_replace('~(\?|&)logout=[^&]*~', '$1', $url);
+			$url = preg_replace('~(\?|&)check=[^&]*~', '$1', $url);
+			echo "<script>window.location.replace('$url')</script>";	
+		}
 
-                        	throw new Exception('dupli');
 
-                        }else if(LtkWp::setIdLtk(str_replace(" ","",$rep->{"acc_id"}),str_replace(" ","",$rep->{"usr_acess_key"}) )){
+		// Set LtkId
+		// Logout = remove Token
+		if($_POST['check'] && $_POST['ltkId']){
+			error_log('tamo here');
+			if($_SESSION['LTK_OAUTH_CODE'] == $_POST['check']){
+				LtkWp::setIdLtk($_POST['ltkId']);
+			}
+		}
 
-                               $msgPost['class'] = 'updtSucess';
-                               $msgPost['msg'] = getTextLtk('ltkMsgAdmIdAlt_1');
-
-                        }else{
-
-                           throw new Exception('err');
-                        }
-
-					}else{
-                        if(empty($rep))
-                            throw new Exception("wsnull");
-						else
-    	                    throw new Exception("err");
-					}
-
-				}catch (Exception $e) {
-                    $msgs['err']     = getTextLtk('ltkMsgAdmInitError_7');
-                    $msgs['empty']   = getTextLtk('ltkMsgAdmInitError_8');
-                    $msgs['dupli']	 = getTextLtk('ltkMsgAdmIdAlt_4');
-                    $msgs['wsnull']  = getTextLtk('ltkMsgAdmInitError_6');
-
-                    $msgPost['class'] = 'updtFail';
-                    $msgPost['msg'] = $msgs[$e->getMessage()];
-                }
-
-			}//endIfNewLtk
-			
+		LtkWp::genOauthCheck();
+		require_once('contents/cssInit.php');
+		require_once('ltk-init.php');
 		
-		
+	}
 
 
-	
-	  require_once('contents/cssInit.php');
-	  require_once('ltk-init.php');
-	
-	}
-	
-	
 	/**
-	 * Verifica se o ID digitado é um número e retirando os espaços em branco
-	 **/
-	function idIsNum($id){
-	   if(is_numeric(str_replace(" ","",$id)))
-	   	return true;
-	   else
-	   	return false;
-	}
-	
-	
-	/**
-	 * Verifica se o ID que esta tentando salvar é diferente do que esta salvo
-	 **/
-	function idIsDiference($id){
-	   if($id == LtkWp::getIdLtk())
-	      return false;
-	   else
-	      return true;
-	}
-	
-	
-	/**
-	 * Exemplo de como ficaria com submenu para outra funcionalidade
-	 *
+	 * Oauth
 	 */
-	/*
-	function admPainel(){
-	 echo 'Implementar um painel navegg para Wp';
+	function getOauthUrl(){
+		
+		$redir = urlencode((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]".'&check='.LtkWp::getOauthCheck());
+		$url = LTKWp::$oauthUrl.'?redir='.$redir;
+		return $url;
 	}
-	*/
-	
+
+	function getLogoutUrl(){
+		return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]".'&logout=1&check='.LtkWp::getOauthCheck();
+	}
+
+
+	/**
+	 * Oauth checksum
+	 */
+	function genOauthCheck(){
+		$_SESSION['LTK_OAUTH_CODE'] = uniqid();
+	}
+	function getOauthCheck(){
+		return $_SESSION['LTK_OAUTH_CODE'];
+	}
+	/**
+	 * Oauth Token
+	 */
+	function createLtkToken(){
+		//Cria na table Options do wordpress o campo LTK_ID com valor vazio caso nao tenha ainda
+		if(LtkWp::getLtkToken() == '')
+			add_option('LTK_OAUTH_TOKEN');
+	}
+	function setLtkToken($token){
+		update_option('LTK_OAUTH_TOKEN', $token);
+	}
+	function deleteLtkToken(){
+			delete_option('LTK_OAUTH_TOKEN');
+	}
+	function getLtkToken(){
+		return get_option('LTK_OAUTH_TOKEN'); 
+	}
+
+
+	function isLogged(){
+		return true ? LtkWp::getLtkToken()!='' : false;
+	}
+
+	/**
+	 * Get Account list with Oauth TOken
+	 */
+	function getAccList(){
+		$token = LtkWp::getLtkToken();
+		if(!$token) return Array();
+
+		$options = array(
+			'http' => array(
+				'header'  => "Authorization: bearer $token\r\n".
+					"Content-type: application/json\r\n",
+				'method'  => 'POST'
+			)
+		);
+		$context  = stream_context_create($options);
+		$result = file_get_contents(LtkWp::$oauthInfoUrl, false, $context);
+		if ($result === FALSE) { /* Handle error */ }
+
+		$data = json_decode($result, true);
+		return $data['accs']['enumNames'];
+
+
+	}
 	
 	
 	
 	
 	//Manipular dados
+
+	function base62($num, $b=62) {
+		$base='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		$r = $num  % $b ;
+		$res = $base[$r];
+		$q = floor($num/$b);
+		while ($q) {
+		  $r = $q % $b;
+		  $q =floor($q/$b);
+		  $res = $base[$r].$res;
+		}
+		return $res;
+	}
 	
 	
 	/**
 	 * Cria ID Leadtracker
 	 */
 	function createIdLtk(){
-	 //Cria na table Options do wordpress o campo ID_NAVEGG com valor vazio caso nao tenha ainda
+	 //Cria na table Options do wordpress o campo LTK_ID com valor vazio caso nao tenha ainda
 	  if(LtkWp::getIdLtk() == '')
-	     add_option('ID_NAVEGG');
+	     add_option('LTK_ID');
+		 add_option('LTK_ID_INIT');
 	}
-	
-	/**
-	 * Deleta ID Leadtracker
-	 */
 	function deleteIdLtk(){
-	     delete_option('ID_NAVEGG');
-	     LtkWp::deleteAutoInLtk();
+		delete_option('LTK_ID');
+		delete_option('LTK_ID_INIT');
 	}
-	
-	/** 
-	 * Pega ID Leadtracker
-	 */
 	function getIdLtk(){
-	   return get_option('ID_NAVEGG'); 
+		return get_option('LTK_ID'); 
+	 }
+	function getIdLtkInit(){
+		return get_option('LTK_ID_INIT'); 
 	}
-	
-	/**
-	 * Atualiza ID Naveg
-	*/
-	function setIdLtk($id, $autoIn = NULL){
-	   if(!empty($autoIn)) LtkWp::setAutoInLtk($autoIn);
-
-	   if(update_option('ID_NAVEGG',$id))
+	function setIdLtk($id){
+	   if(update_option('LTK_ID',$id)){
+		update_option('LTK_ID_INIT',LtkWp::base62($id));
 	      return true;
-	   else
-	      return false;
+		  
+	   }
+	   
+	   return false;
 	}
 	
 
-	/**
-	  * Manipular autologin
-          */
-	function createAutoInLtk(){
-		if(LtkWp::getAutoInLtk() == '')
-			add_option('AUTOIN_NAVEGG');
-	}
-	function deleteAutoInLtk(){
-		if(LtkWp::getAutoInLtk() != '')
-			delete_option('AUTOIN_NAVEGG');
-	}
-	function getAutoInLtk(){
-		return get_option('AUTOIN_NAVEGG');
-	} 
-        function setAutoInLtk($key){
-		LtkWp::createAutoInLtk();
-           	update_option('AUTOIN_NAVEGG',$key);
-        }
 
 	
 	//Impressões
@@ -317,7 +247,7 @@ class LtkWp{
 	function echoLeadtracker() { 
 	    
 	   if(LtkWp::getIdLtk() != '')
-			echo '<!-- Lead Tracker -->'."\n".
+			echo '<!-- Lead Tracker - Wordpress Plugin -->'."\n".
 			'<script>'."\n".
 			'(function(l,d,t,r,c,k){'."\n".
 			'if(!l.lt){l.lt=l.lt||{_c:[]};'."\n".
@@ -326,12 +256,10 @@ class LtkWp{
 			'k.src=t;c.appendChild(k);}'."\n".
 			'l.ltq = l.ltq || function(k,v){l.lt._c.push([k,v])};'."\n".
 			''."\n".
-			'ltq(\'init\', \'1-1\')'."\n".
-			'})(window,document,\'//tag.ltrck.com.br/lt1.js\');'."\n".
+			'ltq(\'init\', \''.LtkWp::getIdLtkInit().'-0\')'."\n".
+			'})(window,document,\'//tag.ltrck.com.br/lt'.LtkWp::getIdLtk().'.js?wp=1\');'."\n".
 			'</script>'."\n".
 			'<!-- End Lead Tracker -->';
-
-	        #echo '<script id="navegg" type="text/javascript" src="//tag.ltrck.com.br/lt'.LtkWp::getIdLtk().'.js"></script>'."\n";
 	
 	}
 	
@@ -344,48 +272,6 @@ class LtkWp{
 	          </div>';
 	
 	}
-	
-	
-
-	// Webservice
-	
-	
-	/**
-	 * GET ID Leadtracker by e-mail
-	 */
-    function apiGetId($email){
-        $url = LtkWp::$ltkApiUrl;
-        $url .= '?action=partneruseremail';
-        $url .= '&part_key='.LtkWp::$ltkApiKey;
-        $url .= '&email='.urlencode($email);
-        $content = file_get_contents( $url );
-        return json_decode($content);
-
-    }
-
-
-    /**
-     * New Account
-     */
-    function apiNewAcc($name,$email,$siteName,$siteUrl){
-
-        $postdata = http_build_query(
-        array(
-            'action' => 'partneraccount',
-            'usr_name' => $name,
-            'usr_email' => $email,
-            'usr_site_name' => $siteName,
-            'usr_domain' => $siteUrl,
-            'part_key' => LtkWp::$ltkApiKey
-        )
-        );
-
-        $opts = array('http' =>array('method'  => 'POST','content' => $postdata));
-        $context = stream_context_create($opts);
-        $content = file_get_contents(LtkWp::$ltkApiUrl, 0, $context);
-
-        return json_decode($content);
-    }
 
 //EndClass
 }
