@@ -84,6 +84,7 @@
 				   	<div class="status <?php  echo LtkWp::getIdLtk() != ''?'on':'off'; ?>">
 				   	   <span></span>
 					   <?php  echo LtkWp::getIdLtk() != '' ? 'ativo' : 'inativo' ; ?>
+					   (Acc: <?php  echo LtkWp::getIdLtk(); ?>)
 		        </div>
 				   </h2>
            
@@ -100,7 +101,7 @@
 					<h4>
 						<b>Logue com a sua conta:</b>
 					</h4>
-					<div class="btn" onCLick="openLoginPopup()">
+					<div class="btn" onCLick="LtkWpOpenLoginPopup()">
 						<img src="<?php echo plugins_url( 'contents/ltk-login.png', __FILE__ ); ?>" />
 						<span>Entrar</span>
 					</div>
@@ -112,7 +113,7 @@
 				?>
 
 				<form method="post" action=""> 
-					<input type="hidden" name="check" value="<?=LtkWp::getOauthCheck()?>" />
+					<input type="hidden" name="check" value="<?php echo  esc_attr(LtkWp::getOauthCheck());?>" />
 					<h4><b>Logue com a sua conta:</b></h4>
 					<p>Selecione qual pixel você deseja instalar.</p>
 					<?php
@@ -124,14 +125,14 @@
 					<select name="ltkId">
 						<?php
 						foreach($accs as $k=>$v){ ?>
-						<option <?=$k==$ltkId?'selected':''?>  value="<?=$k?>"><?=$v?></option>
+						<option <?php if($k==$ltkId) echo 'selected'; ?>  value="<?php echo  esc_attr($k);?>"><?php echo $v;?></option>
 						<?php } ?>
 					</select>
 
 					<button class="button" title="Salvar">Salvar</button>
 			        	
 				</form>
-				<a class="logout" href="<?=LtkWp::getLogoutUrl()?>">Deslogar</a>
+				<a class="logout" href="<?php echo  esc_url( LtkWp::getLogoutUrl());?>">Deslogar</a>
 
 				<?php } ?>
 
@@ -159,7 +160,7 @@
 					<div class="texto">						
 						<h3>Leadtracker </h3>
 						<p>
-							<a href="<?php echo $pnUrl; ?>" target="_blank">
+							<a href="<?php echo esc_url($pnUrl); ?>" target="_blank">
 								Clique aqui
 							</a> 
 							 para acessar seus relatórios completos sobre seus lançamentos.
@@ -182,8 +183,8 @@
 </div>
 <script type="text/javascript">
 
-function openLoginPopup(){
-	let url = '<?=LtkWp::getOauthUrl()?>';
+function LtkWpOpenLoginPopup(){
+	let url = '<?php echo esc_url( LtkWp::getOauthUrl());?>';
 
 	let popup = window.open(url, 'popup', "width=410, height=610, resizable=false, scrollbars=no")
 
