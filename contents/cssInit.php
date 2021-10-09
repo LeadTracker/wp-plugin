@@ -19,7 +19,8 @@
 .toplevel-leadtracker .ic_ltk{ background:transparent url(<?php echo plugins_url( 'ui_wp_ltk.png', __FILE__ ); ?>) no-repeat right -231px;}
 .inside{padding:10px!important;}
 .inside p{ line-height:20px; padding-bottom:10px; margin:5px 0 0 5px; }
-.inside .login .btn {display:flex;flex-direction:column;align-items: center; text-decoration:none; color: inherit; border:1px solid #333; border-style: dotted;padding:5px 10px; width:50px}
+.inside .login .cnt {}
+.inside .login .btn {cursor:pointer;display:flex;flex-direction:column;align-items: center; text-decoration:none; color: inherit; border:1px solid #333; border-style: dotted;padding:5px 10px; width:50px}
 .inside .login a.know {margin-top:10px;display:block;}
 .inside .login .btn img {display:inline-block; max-width:40px;width:auto;}
 

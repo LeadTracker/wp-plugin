@@ -76,7 +76,7 @@ class LtkWp{
 		if($_GET['check'] && $_GET['code']){
 
 			if($_SESSION['LTK_OAUTH_CODE'] == $_GET['check']){
-				LtkWp::setLtkToken($_GET['code']);
+				LtkWp::setLtkToken(filter_var($_GET['code'], FILTER_SANITIZE_STRING));
 			}
 			echo "<script>window.close()</script>";
 		}
@@ -85,7 +85,6 @@ class LtkWp{
 		if($_GET['check'] && $_GET['logout']){
 
 			if($_SESSION['LTK_OAUTH_CODE'] == $_GET['check']){
-				error_log('ta removendo sim....');
 				LtkWp::deleteLtkToken();
 				LtkWp::deleteIdLtk();
 			}
@@ -93,16 +92,15 @@ class LtkWp{
 			$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]".$_SERVER['REQUEST_URI'];
 			$url = preg_replace('~(\?|&)logout=[^&]*~', '$1', $url);
 			$url = preg_replace('~(\?|&)check=[^&]*~', '$1', $url);
-			echo "<script>window.location.replace('$url')</script>";	
+			echo "<script>window.location.replace('".esc_url($url)."')</script>";	
 		}
 
 
 		// Set LtkId
 		// Logout = remove Token
 		if($_POST['check'] && $_POST['ltkId']){
-			error_log('tamo here');
 			if($_SESSION['LTK_OAUTH_CODE'] == $_POST['check']){
-				LtkWp::setIdLtk($_POST['ltkId']);
+					LtkWp::setIdLtk(filter_var($_POST['ltkId'], FILTER_SANITIZE_NUMBER_INT));
 			}
 		}
 
@@ -210,26 +208,16 @@ class LtkWp{
 	 //Cria na table Options do wordpress o campo LTK_ID com valor vazio caso nao tenha ainda
 	  if(LtkWp::getIdLtk() == '')
 	     add_option('LTK_ID');
-		 add_option('LTK_ID_INIT');
 	}
 	function deleteIdLtk(){
 		delete_option('LTK_ID');
-		delete_option('LTK_ID_INIT');
+
 	}
 	function getIdLtk(){
 		return get_option('LTK_ID'); 
 	 }
-	function getIdLtkInit(){
-		return get_option('LTK_ID_INIT'); 
-	}
 	function setIdLtk($id){
-	   if(update_option('LTK_ID',$id)){
-		update_option('LTK_ID_INIT',LtkWp::base62($id));
-	      return true;
-		  
-	   }
-	   
-	   return false;
+	   return update_option('LTK_ID',$id);
 	}
 	
 
@@ -254,8 +242,8 @@ class LtkWp{
 			'k.src=t;c.appendChild(k);}'."\n".
 			'l.ltq = l.ltq || function(k,v){l.lt._c.push([k,v])};'."\n".
 			''."\n".
-			'ltq(\'init\', \''.LtkWp::getIdLtkInit().'-0\')'."\n".
-			'})(window,document,\'//tag.ltrck.com.br/lt'.LtkWp::getIdLtk().'.js?wp=1\');'."\n".
+			'ltq(\'init\', \''.esc_html(LtkWp::base62(LtkWp::getIdLtk())).'-0\')'."\n".
+			'})(window,document,\'//tag.ltrck.com.br/lt'.esc_html(LtkWp::getIdLtk()).'.js?wp=1\');'."\n".
 			'</script>'."\n".
 			'<!-- End Lead Tracker -->';
 	

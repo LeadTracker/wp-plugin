@@ -84,7 +84,7 @@
 				   	<div class="status <?php  echo LtkWp::getIdLtk() != ''?'on':'off'; ?>">
 				   	   <span></span>
 					   <?php  echo LtkWp::getIdLtk() != '' ? 'ativo' : 'inativo' ; ?>
-					   (Acc: <?php  echo LtkWp::getIdLtk(); ?>)
+					   <?php if(LtkWp::getIdLtk() != ''){ ?> (Acc: <?php  echo LtkWp::getIdLtk(); ?>)<?php } ?>
 		        </div>
 				   </h2>
            
@@ -101,9 +101,11 @@
 					<h4>
 						<b>Logue com a sua conta:</b>
 					</h4>
-					<div class="btn" onCLick="LtkWpOpenLoginPopup()">
-						<img src="<?php echo plugins_url( 'contents/ltk-login.png', __FILE__ ); ?>" />
-						<span>Entrar</span>
+					<div class="cnt">
+						<div class="btn" onCLick="LtkWpOpenLoginPopup()">
+							<img src="<?php echo plugins_url( 'contents/ltk-login.png', __FILE__ ); ?>" />
+							<span>Entrar</span>
+						</div>
 					</div>
 
 					<a class="know" target="_blank" href="https://leadtracker.com.br?utm_content=plugin_wordpress">Não possui uma conta? Conheça o Lead Tracker</a>
