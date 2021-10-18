@@ -18,9 +18,10 @@ class LtkWp{
 	 */
 	function inicializar(){
 	
+      if (!isset($_SESSION)) { session_start(); }
+
 	  //Mapear infos relevantes para plugin
 	  LtkWp::$info['plugin_fpath']= dirname(__FILE__);
-	
 	
 	  //Chama a função para imprimir a tag no head
 	  add_action( 'wp_head', array('ltkWp','echoLeadtracker'));
