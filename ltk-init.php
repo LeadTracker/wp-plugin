@@ -58,7 +58,7 @@
 				  Planos
 				</a></li>
 				  
-				<li><a href="https://leadtracker.com.br/contato-2/" target="_blank">
+				<li><a href="https://leadtracker.com.br/faleconosco/" target="_blank">
 					<span class="dashicons dashicons-email-alt"></span>
 					Contato
 				</a></li>
@@ -199,4 +199,3 @@ function LtkWpOpenLoginPopup(){
 }
 
 </script>
-
