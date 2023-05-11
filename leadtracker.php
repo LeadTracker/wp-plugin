@@ -3,7 +3,7 @@
 Plugin Name: Lead Tracker
 Plugin URI: https://leadtracker.com.br/
 Description: Mensure, analise e acompanhe seus lançamentos.
-Version: 1.0.0
+Version: 1.0.1
 Author: Leadtracker 
 Author URI: https://leadtracker.com.br
 License: GPLv2
