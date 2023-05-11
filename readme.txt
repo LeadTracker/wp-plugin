@@ -3,8 +3,8 @@ Contributors: Lead Tracker
 Donate link: http://www.leadtracker.com.br/
 Tags: audience evergreen, launch, trackeamento, tracking, utms
 Requires at least: 2.0.2
-Tested up to: 5.8.1
-Stable tag: 1.0.0
+Tested up to: 6.2
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,6 +39,8 @@ https://leadtracker.com.br/contato-2/
 
 = 1.0.0 =
 * Release version.
-
+= 1.0.1 =
+* Bug fix.
+* Compatibility fix.
 
 `<?php code(); // goes in backticks ?>`

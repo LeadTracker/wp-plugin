@@ -16,7 +16,7 @@ class LtkWp{
 	/**
 	 * Função de inicialização
 	 */
-	function inicializar(){
+	static function inicializar(){
 	
       if (!isset($_SESSION)) { session_start(); }
 
@@ -37,7 +37,7 @@ class LtkWp{
 	/**
 	 * Função de instalação
 	 */
-	function instalar(){
+	static function instalar(){
 	    //Verifica se esta inicializado se não estiver, inicializa;
 	    if ( is_null(LtkWp::$info) ) LtkWp::inicializar();
 	    
@@ -49,7 +49,7 @@ class LtkWp{
 	/**
 	 * Função de desinstalação
 	 */
-	function desinstalar(){
+	static function desinstalar(){
 	  //Deleta dados do banco
 	   LtkWp::deleteIdLtk();
 	   LtkWp::deleteLtkToken();
@@ -63,7 +63,7 @@ class LtkWp{
 	/**
 	 * Cria página de adm
 	 */
-	function createAdmLtk(){
+	static function createAdmLtk(){
 		add_menu_page('Lead Tracker','Lead Tracker',10,'ltk-admin',array('LtkWp','admInit'),plugins_url( '/contents/ltklogo.svg', __FILE__ ));
 	}
 	
@@ -71,7 +71,7 @@ class LtkWp{
 	 * Faz o include da pagina inicial do administrador, que é chamado quando
 	 * o usuário clica no menu Lead Tracker
 	 */
-	function admInit(){ 
+	static function admInit(){ 
 
 		// Oauth return from panel
 		if($_GET['check'] && $_GET['code']){
@@ -115,14 +115,14 @@ class LtkWp{
 	/**
 	 * Oauth
 	 */
-	function getOauthUrl(){
+	static function getOauthUrl(){
 		
 		$redir = urlencode((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]".'&check='.LtkWp::getOauthCheck());
 		$url = LTKWp::$oauthUrl.'?redir='.$redir;
 		return $url;
 	}
 
-	function getLogoutUrl(){
+	static function getLogoutUrl(){
 		return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]".'&logout=1&check='.LtkWp::getOauthCheck();
 	}
 
@@ -130,39 +130,39 @@ class LtkWp{
 	/**
 	 * Oauth checksum
 	 */
-	function genOauthCheck(){
+	static function genOauthCheck(){
 		$_SESSION['LTK_OAUTH_CODE'] = uniqid();
 	}
-	function getOauthCheck(){
+	static function getOauthCheck(){
 		return $_SESSION['LTK_OAUTH_CODE'];
 	}
 	/**
 	 * Oauth Token
 	 */
-	function createLtkToken(){
+	static function createLtkToken(){
 		//Cria na table Options do wordpress o campo LTK_ID com valor vazio caso nao tenha ainda
 		if(LtkWp::getLtkToken() == '')
 			add_option('LTK_OAUTH_TOKEN');
 	}
-	function setLtkToken($token){
+	static function setLtkToken($token){
 		update_option('LTK_OAUTH_TOKEN', $token);
 	}
-	function deleteLtkToken(){
+	static function deleteLtkToken(){
 			delete_option('LTK_OAUTH_TOKEN');
 	}
-	function getLtkToken(){
+	static function getLtkToken(){
 		return get_option('LTK_OAUTH_TOKEN'); 
 	}
 
 
-	function isLogged(){
+	static function isLogged(){
 		return true ? LtkWp::getLtkToken()!='' : false;
 	}
 
 	/**
 	 * Get Account list with Oauth TOken
 	 */
-	function getAccList(){
+	static function getAccList(){
 		$token = LtkWp::getLtkToken();
 		if(!$token) return Array();
 
@@ -188,7 +188,7 @@ class LtkWp{
 	
 	//Manipular dados
 
-	function base62($num, $b=62) {
+	static function base62($num, $b=62) {
 		$base='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 		$r = $num  % $b ;
 		$res = $base[$r];
@@ -205,19 +205,19 @@ class LtkWp{
 	/**
 	 * Cria ID Leadtracker
 	 */
-	function createIdLtk(){
+	static function createIdLtk(){
 	 //Cria na table Options do wordpress o campo LTK_ID com valor vazio caso nao tenha ainda
 	  if(LtkWp::getIdLtk() == '')
 	     add_option('LTK_ID');
 	}
-	function deleteIdLtk(){
+	static function deleteIdLtk(){
 		delete_option('LTK_ID');
 
 	}
-	function getIdLtk(){
+	static function getIdLtk(){
 		return get_option('LTK_ID'); 
 	 }
-	function setIdLtk($id){
+	static function setIdLtk($id){
 	   return update_option('LTK_ID',$id);
 	}
 	
@@ -231,7 +231,7 @@ class LtkWp{
 	/**
 	 * Imprime Tag Js Leadtracker
 	 */
-	function echoLeadtracker() { 
+	static function echoLeadtracker() { 
 	    
 	   if(LtkWp::getIdLtk() != '')
 			echo '<!-- Lead Tracker - Wordpress Plugin -->'."\n".
@@ -253,7 +253,7 @@ class LtkWp{
 	/**
 	 * Aviso que o site ainda não está sendo analisado, pois falta cadastrar o ID
 	 */
-	function echoMsgNotId(){	
+	static function echoMsgNotId(){	
 	    echo '<div id="ltkMsgAdmNotId" class="updated fade">
 	           <p>Falta pouco para completar a sua instalação! <a href="admin.php?page=ltk-admin">Conecte sua conta</a> para que as visitas de seu site comecem a ser analisadas.</p>
 	          </div>';
