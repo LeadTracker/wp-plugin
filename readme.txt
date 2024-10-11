@@ -1,4 +1,4 @@
-﻿=== Plugin Name ===
+﻿=== Lead Tracker ===
 Contributors: Lead Tracker
 Donate link: http://www.leadtracker.com.br/
 Tags: audience evergreen, launch, trackeamento, tracking, utms
